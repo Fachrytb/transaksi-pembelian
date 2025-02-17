@@ -9,7 +9,8 @@ import {
   deleteDoc,
   updateDoc,
   query,
-  orderBy
+  orderBy,
+  where
 } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js'
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 
@@ -31,7 +32,7 @@ export async function ambilDaftarBarang() {
   const refDokumen = collection(basisdata, "inventory");
   const kueri = query(refDokumen, orderBy("item"));
   const cuplikanKueri = await getDocs(kueri);
-
+  
   let hasilKueri = [];
   cuplikanKueri.forEach((dokumen) => {
     hasilKueri.push({
@@ -41,7 +42,7 @@ export async function ambilDaftarBarang() {
       harga: dokumen.data().harga
     })
   })
-
+  
   return hasilKueri;
 }
 
@@ -55,16 +56,41 @@ export async function tambahBarangKeKeranjang(
   namapelanggan
 ) {
   try {
-    // menyimpan data ke collection transaksi
-    const refDokumen = await addDoc(collection(basisdata, "transaksi"), {
-      idbarang: idbarang,
-      nama: nama,
-      harga: harga,
-      jumlah: jumlah,
-      idpelanggan: idpelanggan,
-      namapelanggan: namapelanggan
+    // periksa apakah idbarang sudah ada di collection transaksi?
+    
+    // mengambil data di seluruh collection transaksi
+    let refDokumen = collection(basisdata, "transaksi")
+    
+    // membuat query untuk mencari data berdasarkan idbarang
+    let queryBarang = query(refDokumen, where("idbarang", "==", idbarang))
+    
+    let snapshotBarang = await getDocs(queryBarang)
+    let jumlahRecord = 0
+    let idtransaksi = ''
+    let jumlahSebelumnya = 0
+    
+    snapshotBarang.forEach((dokumen) => {
+      jumlahRecord++
+      idtransaksi = dokumen.id
+      jumlahSebelumnya = dokumen.data().jumlah
     })
-
+    
+    if (jumlahRecord == 0) {
+      // kalau belum ada, tambahkan langsung ke collection
+      const refDokumen = await addDoc(collection(basisdata, "transaksi"), {
+        idbarang: idbarang,
+        nama: nama,
+        harga: harga,
+        jumlah: jumlah,
+        idpelanggan: idpelanggan,
+        namapelanggan: namapelanggan
+      })
+    } else if (jumlahRecord == 1) {
+      // kalau sudah ada, tambahkan jumlahnya saja
+      jumlahSebelumnya++
+      await updateDoc(doc(basisdata, "transaksi", idtransaksi), { jumlah: jumlahSebelumnya })
+    }
+    
     // menampilkan pesan berhasil
     console.log("berhasil menyimpan keranjang")
   } catch (error) {
@@ -78,7 +104,7 @@ export async function ambilDaftarBarangDiKeranjang() {
   const refDokumen = collection(basisdata, "transaksi");
   const kueri = query(refDokumen, orderBy("nama"));
   const cuplikanKueri = await getDocs(kueri);
-
+  
   let hasilKueri = [];
   cuplikanKueri.forEach((dokumen) => {
     hasilKueri.push({
@@ -88,6 +114,6 @@ export async function ambilDaftarBarangDiKeranjang() {
       harga: dokumen.data().harga
     })
   })
-
+  
   return hasilKueri;
 }
