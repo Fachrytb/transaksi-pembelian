@@ -140,3 +140,23 @@ export async function ambilDaftarPelanggan() {
 
   return hasilKueri;
 }
+
+export async function ambilBarangProsesDiKeranjang() {
+  let refDokumen = collection(basisdata, "transaksi")
+  
+  // membuat query untuk mencari data yg masih proses
+  let queryBarangProses = query(refDokumen, where("idpelanggan", "==", "proses"))
+  
+  let snapshotBarang = await getDocs(queryBarangProses)
+  let hasilKueri = []
+  snapshotBarang.forEach((dokumen) => {
+    hasilKueri.push({
+      id: dokumen.id,
+      nama: dokumen.data().nama,
+      jumlah: dokumen.data().jumlah,
+      harga: dokumen.data().harga,
+      idpelanggan: dokumen.data().idpelanggan,
+      namapelanggan: dokumen.data().namapelanggan,
+    })
+  })
+}
