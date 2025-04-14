@@ -127,7 +127,7 @@ export async function ambilDaftarPelanggan() {
   const refDokumen = collection(basisdata, "pelanggan");
   const kueri = query(refDokumen, orderBy("nama"));
   const cuplikanKueri = await getDocs(kueri);
-
+  
   let hasilKueri = [];
   cuplikanKueri.forEach((dokumen) => {
     hasilKueri.push({
@@ -137,7 +137,7 @@ export async function ambilDaftarPelanggan() {
       nohape: dokumen.data().nohape
     })
   })
-
+  
   return hasilKueri;
 }
 
@@ -163,19 +163,10 @@ export async function ambilBarangProsesDiKeranjang() {
   return hasilKueri
 }
 
-export async function ubahBarangProsesDiKeranjang(idpelanggan, namapelanggan) {
-  let refDokumen = collection(basisdata, "transaksi")
-  
-  // membuat query untuk mencari data yg masih proses
-  let queryBarangProses = query(refDokumen, where("idpelanggan", "==", "proses"))
-  
-  let snapshotBarang = await getDocs(queryBarangProses)
-  snapshotBarang.forEach((dokumen) => {
-    await updateDoc(
-      doc(basisdata, "transaksi", dokumen.id),
-      { idpelanggan: idpelanggan, namapelanggan: namapelanggan }
-    )
-  })
+export async function ubahBarangProsesDiKeranjang(id, idpelanggan, namapelanggan) {
+  await updateDoc(
+    doc(basisdata, "transaksi", id), { idpelanggan: idpelanggan, namapelanggan: namapelanggan }
+  )
 }
 
 export async function ambilPelanggan(id) {
